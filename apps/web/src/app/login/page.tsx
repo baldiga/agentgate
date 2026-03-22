@@ -27,7 +27,7 @@ export default function LoginPage() {
         setError(data.message ?? 'Login failed')
         return
       }
-      router.push('/')
+      router.push('/admin/agents')
     } catch {
       setError('Network error')
     } finally {
