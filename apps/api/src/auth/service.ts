@@ -50,6 +50,7 @@ export async function loginUser(email: string, password: string) {
   const user = result.rows[0]
   if (!user) throw new Error('INVALID_CREDENTIALS')
 
+  if (!user.password_hash) throw new Error('INVALID_CREDENTIALS')
   const valid = await bcrypt.compare(password, user.password_hash)
   if (!valid) throw new Error('INVALID_CREDENTIALS')
 
