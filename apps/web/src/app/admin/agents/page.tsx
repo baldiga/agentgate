@@ -9,7 +9,12 @@ async function getAgents(token: string): Promise<Agent[]> {
 
 export default async function AgentsPage() {
   const token = cookies().get('agentgate_token')?.value ?? ''
-  const agents = await getAgents(token)
+  let agents: Agent[] = []
+  try {
+    agents = await getAgents(token)
+  } catch {
+    // show empty list on error
+  }
   return (
     <div>
       <h1 className="mb-6 font-display text-2xl font-bold text-text-primary">Agents</h1>

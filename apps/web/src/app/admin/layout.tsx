@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const token = cookies().get('agentgate_token')?.value
   if (!token) redirect('/login')
   const payload = parseJwtPayload(token)
-  if (payload?.role !== 'superadmin') redirect('/')
+  if (payload?.role !== 'superadmin') redirect('/login')
 
   return (
     <div className="flex h-screen bg-bg">
