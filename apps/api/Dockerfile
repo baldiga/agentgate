@@ -30,7 +30,8 @@ RUN npm ci --omit=dev
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY apps/api/migrations/ ./apps/api/migrations/
 
-RUN mkdir -p /app/uploads && chown node:node /app/uploads
+# Create uploads dir with correct permissions before switching user
+RUN mkdir -p /app/apps/api/uploads && chown -R node:node /app/apps/api
 
 WORKDIR /app/apps/api
 USER node
