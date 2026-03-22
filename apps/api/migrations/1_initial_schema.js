@@ -53,7 +53,7 @@ exports.up = (pgm) => {
     id: { type: 'uuid', primaryKey: true, default: pgm.func('gen_random_uuid()') },
     agent_id: { type: 'uuid', notNull: true, references: '"agents"', onDelete: 'CASCADE' },
     role_id: { type: 'uuid', notNull: true, references: '"roles"', onDelete: 'CASCADE' },
-    actions: { type: 'text[]', notNull: true, default: "'{}'" },
+    actions: { type: 'text[]', notNull: true, default: pgm.func("'{}'") },
   })
   pgm.addConstraint('agent_role_permissions', 'arp_unique', 'UNIQUE (agent_id, role_id)')
 
