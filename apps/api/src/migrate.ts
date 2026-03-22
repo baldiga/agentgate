@@ -1,7 +1,7 @@
 import { config } from './config'
 
 export async function runMigrations(): Promise<void> {
-  const runner = require('node-pg-migrate').default
+  const runner = require('node-pg-migrate')
   await runner({
     databaseUrl: config.DATABASE_URL,
     dir: 'migrations',
