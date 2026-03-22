@@ -13,6 +13,7 @@ import { auditRouter } from './audit/router'
 import { usersRouter } from './users/router'
 import { rolesRouter } from './roles/router'
 import { requireAuth } from './auth/middleware'
+import { settingsRouter } from './settings/router'
 
 export function createApp() {
   const app = express()
@@ -32,6 +33,7 @@ export function createApp() {
   app.use('/api/users', requireAuth, usersRouter)
   app.use('/api/roles', requireAuth, rolesRouter)
 
+  app.use('/api/settings', requireAuth, settingsRouter)
   app.get('/api/health', (_req, res) => res.json({ ok: true }))
 
   return app

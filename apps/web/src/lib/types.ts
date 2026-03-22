@@ -13,9 +13,11 @@ export interface Agent {
   name: string
   slug: string
   description: string
-  ws_endpoint: string
-  online: boolean
-  locked: boolean
+  icon?: string
+  status?: string
+  online?: boolean
+  locked?: boolean
+  ws_endpoint?: string
 }
 
 export interface Message {
@@ -40,10 +42,11 @@ export interface Role {
 }
 
 export interface Permission {
-  agent_id: string
+  id: string
   role_id: string
-  allowed: boolean
-  allowed_actions: string[]
+  role_name: string
+  slug: string
+  actions: string[]
 }
 
 export interface AuditLog {

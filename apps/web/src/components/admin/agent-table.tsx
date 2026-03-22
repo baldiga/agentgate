@@ -19,7 +19,7 @@ export function AgentTable({ agents, onDelete }: AgentTableProps) {
             <th className="px-4 py-3">Name</th>
             <th className="px-4 py-3">Slug</th>
             <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Endpoint</th>
+            <th className="px-4 py-3">Description</th>
             <th className="px-4 py-3">Actions</th>
           </tr>
         </thead>
@@ -29,11 +29,11 @@ export function AgentTable({ agents, onDelete }: AgentTableProps) {
               <td className="px-4 py-3 font-medium text-text-primary">{agent.name}</td>
               <td className="px-4 py-3 font-mono text-text-secondary">{agent.slug}</td>
               <td className="px-4 py-3">
-                <Badge variant={agent.online ? 'success' : 'default'}>
-                  {agent.online ? 'Online' : 'Offline'}
+                <Badge variant={agent.status === 'online' ? 'success' : 'default'}>
+                  {agent.status === 'online' ? 'Online' : 'Offline'}
                 </Badge>
               </td>
-              <td className="px-4 py-3 font-mono text-xs text-muted truncate max-w-xs">{agent.ws_endpoint}</td>
+              <td className="px-4 py-3 text-xs text-muted">{agent.description ?? '—'}</td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   <Link href={`/admin/agents/${agent.id}`} aria-label="edit" className="text-xs text-accent hover:underline">Edit</Link>

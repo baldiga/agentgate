@@ -9,6 +9,7 @@ const links = [
   { href: '/admin/roles', label: 'Roles' },
   { href: '/admin/audit', label: 'Audit Log' },
   { href: '/admin/sdk-tokens', label: 'SDK Tokens' },
+  { href: '/admin/settings', label: 'Settings' },
 ]
 
 export function AdminNav() {

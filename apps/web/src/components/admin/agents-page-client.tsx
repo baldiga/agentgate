@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import type { Agent } from '@/lib/types'
 import { AgentTable } from './agent-table'
 import { Button } from '@/components/ui/button'
-import { apiFetch } from '@/lib/api'
-
 interface AgentsPageClientProps {
   initialAgents: Agent[]
 }
@@ -17,7 +15,7 @@ export function AgentsPageClient({ initialAgents }: AgentsPageClientProps) {
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this agent?')) return
-    await apiFetch(`/api/agents/${id}`, { method: 'DELETE' })
+    await fetch(`/api/agents/${id}`, { method: 'DELETE' })
     setAgents(prev => prev.filter(a => a.id !== id))
   }
 
