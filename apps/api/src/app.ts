@@ -18,6 +18,9 @@ import { settingsRouter } from './settings/router'
 export function createApp() {
   const app = express()
 
+  // Trust reverse proxy (required on Render/Heroku for rate limiting to work correctly)
+  app.set('trust proxy', 1)
+
   app.use(helmet())
   app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3000' }))
   app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300 }))
