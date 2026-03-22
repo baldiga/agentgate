@@ -67,3 +67,24 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(401)
   })
 })
+
+describe('MFA', () => {
+  let adminToken: string
+
+  beforeAll(async () => {
+    const res = await request(app).post('/api/auth/login').send({
+      email: 'admin@test.agentgate',
+      password: 'SuperSecure123!',
+    })
+    adminToken = res.body.token
+  })
+
+  it('returns QR URI when enabling MFA', async () => {
+    const res = await request(app)
+      .post('/api/auth/mfa/enable')
+      .set('Authorization', `Bearer ${adminToken}`)
+    expect(res.status).toBe(200)
+    expect(res.body.otpauthUrl).toContain('otpauth://totp/')
+    expect(res.body.secret).toBeDefined()
+  })
+})
