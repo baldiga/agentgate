@@ -13,7 +13,7 @@ agentPermissionsRouter.get('/', requireSuperadmin, async (req, res) => {
       `SELECT arp.id, arp.role_id, r.name AS role_name, r.slug, arp.actions FROM agent_role_permissions arp JOIN roles r ON r.id = arp.role_id WHERE arp.agent_id = $1`,
       [req.params.agentId]
     )
-    res.json({ permissions: result.rows })
+    res.json(result.rows)
   } catch (err) {
     res.status(500).json({ error: 'Failed to list permissions' })
   }

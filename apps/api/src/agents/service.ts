@@ -48,6 +48,29 @@ export async function rotateToken(agentId: string, gracePeriodMinutes = 15) {
   return rawToken
 }
 
+export async function listSdkTokens(agentId: string) {
+  return (await db.query(
+    `SELECT id, agent_id, label, created_at, grace_period_expires_at AS grace_until
+     FROM sdk_tokens WHERE agent_id = $1 ORDER BY created_at DESC`,
+    [agentId]
+  )).rows
+}
+
+export async function generateSdkToken(agentId: string, label: string) {
+  const rawToken = randomBytes(32).toString('hex')
+  const tokenHash = await bcrypt.hash(rawToken, 10)
+  const result = await db.query(
+    `INSERT INTO sdk_tokens (agent_id, token_hash, label) VALUES ($1, $2, $3)
+     RETURNING id, agent_id, label, created_at`,
+    [agentId, tokenHash, label]
+  )
+  return { ...result.rows[0], token: rawToken }
+}
+
+export async function revokeSdkToken(tokenId: string, agentId: string) {
+  await db.query('DELETE FROM sdk_tokens WHERE id = $1 AND agent_id = $2', [tokenId, agentId])
+}
+
 export async function validateSdkToken(agentId: string, rawToken: string): Promise<boolean> {
   const row = (await db.query(`SELECT token_hash, previous_token_hash, grace_period_expires_at FROM sdk_tokens WHERE agent_id = $1`, [agentId])).rows[0]
   if (!row) return false

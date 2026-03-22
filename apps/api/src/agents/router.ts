@@ -1,7 +1,7 @@
 // apps/api/src/agents/router.ts
 import { Router } from 'express'
 import { requireSuperadmin, AuthRequest } from '../auth/middleware'
-import { createAgent, listAgents, getAgent, updateAgent, deleteAgent, rotateToken } from './service'
+import { createAgent, listAgents, getAgent, updateAgent, deleteAgent, rotateToken, listSdkTokens, generateSdkToken, revokeSdkToken } from './service'
 
 export const agentsRouter = Router()
 
@@ -16,7 +16,7 @@ agentsRouter.post('/', requireSuperadmin, async (req: AuthRequest, res) => {
 
 agentsRouter.get('/', async (_req, res) => {
   try {
-    res.json({ agents: await listAgents() })
+    res.json(await listAgents())
   } catch (err) {
     res.status(500).json({ error: 'Failed to list agents' })
   }
@@ -26,7 +26,7 @@ agentsRouter.get('/:id', async (req, res) => {
   try {
     const agent = await getAgent(req.params.id)
     if (!agent) return res.status(404).json({ error: 'Not found' })
-    res.json({ agent })
+    res.json(agent)
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch agent' })
   }
@@ -36,7 +36,7 @@ agentsRouter.put('/:id', requireSuperadmin, async (req, res) => {
   try {
     const agent = await updateAgent(req.params.id, req.body)
     if (!agent) return res.status(404).json({ error: 'Not found' })
-    res.json({ agent })
+    res.json(agent)
   } catch (err) {
     res.status(500).json({ error: 'Failed to update agent' })
   }
@@ -48,6 +48,31 @@ agentsRouter.delete('/:id', requireSuperadmin, async (req, res) => {
     res.status(204).send()
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete agent' })
+  }
+})
+
+agentsRouter.get('/:id/sdk-tokens', requireSuperadmin, async (req, res) => {
+  try {
+    res.json(await listSdkTokens(req.params.id))
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list SDK tokens' })
+  }
+})
+
+agentsRouter.post('/:id/sdk-tokens', requireSuperadmin, async (req, res) => {
+  try {
+    res.status(201).json(await generateSdkToken(req.params.id, req.body.label ?? 'Default'))
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate SDK token' })
+  }
+})
+
+agentsRouter.delete('/:id/sdk-tokens/:tokenId', requireSuperadmin, async (req, res) => {
+  try {
+    await revokeSdkToken(req.params.tokenId, req.params.id)
+    res.status(204).send()
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to revoke SDK token' })
   }
 })
 

@@ -6,7 +6,7 @@ export const usersRouter = Router()
 
 usersRouter.get('/', requireSuperadmin, async (_req, res) => {
   try {
-    res.json({ users: await listUsers() })
+    res.json(await listUsers())
   } catch (err) {
     res.status(500).json({ error: 'Failed to list users' })
   }

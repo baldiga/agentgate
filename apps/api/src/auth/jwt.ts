@@ -9,7 +9,11 @@ export interface TokenPayload {
 }
 
 export function signToken(payload: TokenPayload): string {
-  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: '8h' })
+  return jwt.sign(
+    { ...payload, role: payload.isSuperadmin ? 'superadmin' : 'user' },
+    config.JWT_SECRET,
+    { expiresIn: '8h' }
+  )
 }
 
 export function verifyToken(token: string): TokenPayload {

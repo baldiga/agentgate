@@ -30,13 +30,11 @@ auditRouter.get('/', requireSuperadmin, async (req, res) => {
       values
     )
 
-    res.json({
-      entries: result.rows.map((row) => ({
-        ...row,
-        content: row.content_encrypted ? decrypt(row.content_encrypted, config.AGENTGATE_SECRET) : null,
-        content_encrypted: undefined,
-      })),
-    })
+    res.json(result.rows.map((row) => ({
+      ...row,
+      content: row.content_encrypted ? decrypt(row.content_encrypted, config.AGENTGATE_SECRET) : null,
+      content_encrypted: undefined,
+    })))
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to fetch audit log' })

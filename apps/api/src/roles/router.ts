@@ -6,7 +6,7 @@ export const rolesRouter = Router()
 
 rolesRouter.get('/', async (_req, res) => {
   try {
-    res.json({ roles: (await db.query('SELECT * FROM roles ORDER BY name')).rows })
+    res.json((await db.query('SELECT * FROM roles ORDER BY name')).rows)
   } catch (err) {
     res.status(500).json({ error: 'Failed to list roles' })
   }
