@@ -25,7 +25,9 @@ export async function getAgent(id: string) {
 }
 
 export async function updateAgent(id: string, data: Partial<{ name: string; description: string; icon: string; timeout_seconds: number }>) {
-  const entries = Object.entries(data)
+  const ALLOWED_FIELDS = new Set(['name', 'description', 'icon', 'timeout_seconds'])
+  const entries = Object.entries(data).filter(([k]) => ALLOWED_FIELDS.has(k))
+  if (entries.length === 0) return getAgent(id) // no-op, return current agent
   const fields = entries.map(([k], i) => `${k} = $${i + 2}`).join(', ')
   return (await db.query(`UPDATE agents SET ${fields} WHERE id = $1 RETURNING *`, [id, ...entries.map(([, v]) => v)])).rows[0]
 }
@@ -38,10 +40,11 @@ export async function rotateToken(agentId: string, gracePeriodMinutes = 15) {
   const rawToken = randomBytes(32).toString('hex')
   const tokenHash = await bcrypt.hash(rawToken, 10)
   const graceExpiry = new Date(Date.now() + gracePeriodMinutes * 60 * 1000)
-  await db.query(
+  const result = await db.query(
     `UPDATE sdk_tokens SET previous_token_hash = token_hash, token_hash = $1, grace_period_expires_at = $2 WHERE agent_id = $3`,
     [tokenHash, graceExpiry, agentId]
   )
+  if ((result.rowCount ?? 0) === 0) throw new Error('No SDK token found for this agent')
   return rawToken
 }
 

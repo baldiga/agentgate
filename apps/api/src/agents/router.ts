@@ -14,25 +14,48 @@ agentsRouter.post('/', requireSuperadmin, async (req: AuthRequest, res) => {
   }
 })
 
-agentsRouter.get('/', async (_req, res) => res.json({ agents: await listAgents() }))
+agentsRouter.get('/', async (_req, res) => {
+  try {
+    res.json({ agents: await listAgents() })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to list agents' })
+  }
+})
 
 agentsRouter.get('/:id', async (req, res) => {
-  const agent = await getAgent(req.params.id)
-  if (!agent) return res.status(404).json({ error: 'Not found' })
-  res.json({ agent })
+  try {
+    const agent = await getAgent(req.params.id)
+    if (!agent) return res.status(404).json({ error: 'Not found' })
+    res.json({ agent })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch agent' })
+  }
 })
 
 agentsRouter.put('/:id', requireSuperadmin, async (req, res) => {
-  const agent = await updateAgent(req.params.id, req.body)
-  if (!agent) return res.status(404).json({ error: 'Not found' })
-  res.json({ agent })
+  try {
+    const agent = await updateAgent(req.params.id, req.body)
+    if (!agent) return res.status(404).json({ error: 'Not found' })
+    res.json({ agent })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update agent' })
+  }
 })
 
 agentsRouter.delete('/:id', requireSuperadmin, async (req, res) => {
-  await deleteAgent(req.params.id)
-  res.status(204).send()
+  try {
+    await deleteAgent(req.params.id)
+    res.status(204).send()
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete agent' })
+  }
 })
 
 agentsRouter.post('/:id/rotate-token', requireSuperadmin, async (req, res) => {
-  res.json({ sdkToken: await rotateToken(req.params.id), gracePeriodMinutes: 15 })
+  try {
+    const sdkToken = await rotateToken(req.params.id)
+    res.json({ sdkToken, gracePeriodMinutes: 15 })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to rotate token' })
+  }
 })
