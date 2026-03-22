@@ -14,7 +14,11 @@ export function encrypt(text: string, secret: string): string {
 }
 
 export function decrypt(payload: string, secret: string): string {
-  const [ivHex, encryptedHex] = payload.split(':')
+  const parts = payload.split(':')
+  if (parts.length !== 2) {
+    throw new Error('Invalid encrypted payload format')
+  }
+  const [ivHex, encryptedHex] = parts
   const iv = Buffer.from(ivHex, 'hex')
   const encrypted = Buffer.from(encryptedHex, 'hex')
   const decipher = createDecipheriv(ALGORITHM, keyBuffer(secret), iv)

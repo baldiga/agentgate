@@ -5,6 +5,9 @@ export const db = new Pool({ connectionString: config.DATABASE_URL })
 
 export async function checkDb(): Promise<void> {
   const client = await db.connect()
-  await client.query('SELECT 1')
-  client.release()
+  try {
+    await client.query('SELECT 1')
+  } finally {
+    client.release()
+  }
 }

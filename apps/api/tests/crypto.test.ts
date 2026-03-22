@@ -14,4 +14,8 @@ describe('crypto', () => {
   it('produces different ciphertext each time (random IV)', () => {
     expect(encrypt('same', secret)).not.toBe(encrypt('same', secret))
   })
+
+  it('throws on malformed payload', () => {
+    expect(() => decrypt('notvalid', secret)).toThrow('Invalid encrypted payload format')
+  })
 })
