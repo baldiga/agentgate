@@ -1,7 +1,6 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy workspace manifests for dependency resolution
 COPY package.json package-lock.json turbo.json ./
 COPY apps/web/package.json apps/web/
 COPY packages/ packages/
@@ -9,26 +8,29 @@ COPY packages/ packages/
 RUN npm ci --workspace=apps/web
 
 COPY apps/web apps/web
+
 ENV NEXT_TELEMETRY_DISABLED=1
-# Allow API URL to be baked into client-side bundle at build time
+# Bake API URL into client bundle at build time
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 WORKDIR /app/apps/web
 RUN npm run build
 
 FROM node:20-alpine AS runner
-WORKDIR /app
+WORKDIR /app/apps/web
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-# In a monorepo, Next.js standalone output mirrors the repo structure:
-# .next/standalone/apps/web/server.js
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next ./.next
+COPY --from=builder /app/apps/web/node_modules ./node_modules
+COPY --from=builder /app/apps/web/package.json ./package.json
 
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-WORKDIR /app/apps/web
-CMD ["node", "server.js"]
+
+CMD ["node_modules/.bin/next", "start", "--port", "3000"]
