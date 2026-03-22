@@ -10,6 +10,9 @@ RUN npm ci --workspace=apps/web
 
 COPY apps/web apps/web
 ENV NEXT_TELEMETRY_DISABLED=1
+# Allow API URL to be baked into client-side bundle at build time
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 WORKDIR /app/apps/web
 RUN npm run build
 
