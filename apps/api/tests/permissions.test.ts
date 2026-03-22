@@ -1,5 +1,5 @@
 // apps/api/tests/permissions.test.ts
-import { checkAccess, checkAction, getUserRoles } from '../src/permissions/engine'
+import { checkAccess, checkAction, getUserRoles, getEffectiveActions } from '../src/permissions/engine'
 import { db } from '../src/db'
 import { v4 as uuid } from 'uuid'
 
@@ -43,4 +43,6 @@ it('superadmin bypasses all checks', async () => {
   const superRoles = [{ id: uuid(), slug: 'superadmin', is_superadmin: true }]
   expect(await checkAccess(agentId, superRoles)).toBe(true)
   expect(await checkAction(agentId, superRoles, 'instruct')).toBe(true)
+  const actions = await getEffectiveActions(agentId, superRoles)
+  expect(actions).toEqual(expect.arrayContaining(['read', 'query', 'request', 'instruct', 'trigger_subagents']))
 })

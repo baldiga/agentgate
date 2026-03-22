@@ -17,6 +17,7 @@ export async function getUserRoles(userId: string): Promise<UserRole[]> {
 
 export async function checkAccess(agentId: string, roles: UserRole[]): Promise<boolean> {
   if (roles.some((r) => r.is_superadmin)) return true
+  if (roles.length === 0) return false  // empty array: ANY('{}') works in PG but be explicit
   const result = await db.query(
     `SELECT 1 FROM agent_role_permissions WHERE agent_id = $1 AND role_id = ANY($2::uuid[]) LIMIT 1`,
     [agentId, roles.map((r) => r.id)]
@@ -26,6 +27,7 @@ export async function checkAccess(agentId: string, roles: UserRole[]): Promise<b
 
 export async function getEffectiveActions(agentId: string, roles: UserRole[]): Promise<string[]> {
   if (roles.some((r) => r.is_superadmin)) return ['read', 'query', 'request', 'instruct', 'trigger_subagents']
+  if (roles.length === 0) return []  // empty array: return early
   const result = await db.query(
     `SELECT array_agg(DISTINCT a) AS actions FROM agent_role_permissions, unnest(actions) AS a
      WHERE agent_id = $1 AND role_id = ANY($2::uuid[])`,
