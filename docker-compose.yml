@@ -1,38 +1,15 @@
 version: '3.9'
 
 services:
-  app:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    environment:
-      DATABASE_URL: postgres://agentgate:${POSTGRES_PASSWORD:-agentgate}@postgres:5432/agentgate
-      REDIS_URL: redis://redis:6379
-      AGENTGATE_SECRET: ${AGENTGATE_SECRET}
-      JWT_SECRET: ${JWT_SECRET}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      PORT: 3001
-      NODE_ENV: production
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - uploads:/app/uploads
-
   postgres:
-    image: pgvector/pgvector:pg16
+    image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: agentgate
       POSTGRES_USER: agentgate
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agentgate}
-    ports:
-      - "127.0.0.1:5432:5432"
+      POSTGRES_DB: agentgate
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U agentgate"]
       interval: 5s
@@ -41,14 +18,43 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "127.0.0.1:6379:6379"
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 10
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://agentgate:${POSTGRES_PASSWORD:-agentgate}@postgres:5432/agentgate
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      AGENTGATE_SECRET: ${AGENTGATE_SECRET:?AGENTGATE_SECRET is required}
+      PORT: 4000
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:4000
+    ports:
+      - "3000:3000"
+
 volumes:
-  pgdata:
-  uploads:
+  postgres_data:
