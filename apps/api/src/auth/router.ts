@@ -36,27 +36,44 @@ authRouter.post('/login', async (req, res) => {
 const mfaLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: { error: 'Too many MFA attempts' } })
 
 authRouter.post('/mfa/enable', requireAuth, async (req: AuthRequest, res) => {
-  const { secret, otpauthUrl } = generateMfaSecret(req.user!.email)
-  await saveMfaSecret(req.user!.userId, secret)
-  res.json({ secret, otpauthUrl })
+  try {
+    const { secret, otpauthUrl } = generateMfaSecret(req.user!.email)
+    await saveMfaSecret(req.user!.userId, secret)
+    res.json({ secret, otpauthUrl })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to enable MFA' })
+  }
 })
 
 authRouter.post('/mfa/verify-setup', requireAuth, async (req: AuthRequest, res) => {
-  const valid = await verifyAndEnableMfa(req.user!.userId, req.body.token)
-  if (!valid) return res.status(400).json({ error: 'Invalid MFA token' })
-  res.json({ ok: true })
+  try {
+    const valid = await verifyAndEnableMfa(req.user!.userId, req.body.token)
+    if (!valid) return res.status(400).json({ error: 'Invalid MFA token' })
+    res.json({ ok: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'MFA verification failed' })
+  }
 })
 
 authRouter.post('/mfa/login', mfaLimiter, async (req, res) => {
-  const { userId, token } = req.body
-  const valid = await verifyMfaToken(userId, token)
-  if (!valid) return res.status(401).json({ error: 'Invalid MFA token' })
-  const user = await db.query(
-    `SELECT u.id, u.email, bool_or(r.is_superadmin) AS is_superadmin FROM users u
-     LEFT JOIN user_roles ur ON ur.user_id = u.id LEFT JOIN roles r ON r.id = ur.role_id
-     WHERE u.id = $1 GROUP BY u.id`,
-    [userId]
-  )
-  const u = user.rows[0]
-  res.json({ token: signToken({ userId: u.id, email: u.email, isSuperadmin: u.is_superadmin }) })
+  try {
+    const { userId, token } = z.object({ userId: z.string().uuid(), token: z.string() }).parse(req.body)
+    const valid = await verifyMfaToken(userId, token)
+    if (!valid) return res.status(401).json({ error: 'Invalid MFA token' })
+    const result = await db.query(
+      `SELECT u.id, u.email, bool_or(r.is_superadmin) AS is_superadmin FROM users u
+       LEFT JOIN user_roles ur ON ur.user_id = u.id LEFT JOIN roles r ON r.id = ur.role_id
+       WHERE u.id = $1 GROUP BY u.id`,
+      [userId]
+    )
+    const u = result.rows[0]
+    if (!u) return res.status(404).json({ error: 'User not found' })
+    res.json({ token: signToken({ userId: u.id, email: u.email, isSuperadmin: u.is_superadmin }) })
+  } catch (err: any) {
+    if (err.name === 'ZodError') return res.status(400).json({ error: err.errors })
+    console.error(err)
+    res.status(500).json({ error: 'MFA login failed' })
+  }
 })
